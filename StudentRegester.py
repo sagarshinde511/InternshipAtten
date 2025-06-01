@@ -1,6 +1,7 @@
 import streamlit as st
 import mysql.connector
 from mysql.connector import Error
+import re
 
 # Database connection function
 def create_connection():
@@ -16,7 +17,7 @@ def create_connection():
         st.error(f"Error connecting to MySQL: {e}")
         return None
 
-# Check for duplicates
+# Duplicate check function
 def is_duplicate(conn, email, mobile):
     cursor = conn.cursor()
     query = """
@@ -28,6 +29,13 @@ def is_duplicate(conn, email, mobile):
     cursor.close()
     return result
 
+# Validation functions
+def is_valid_email(email):
+    return re.match(r"[^@]+@[^@]+\.[^@]+", email)
+
+def is_valid_mobile(mobile):
+    return re.match(r"^\d{10}$", mobile)
+
 # Insert data function
 def insert_student_data(student_name, college, batch, mobile, email, address):
     conn = create_connection()
@@ -36,9 +44,9 @@ def insert_student_data(student_name, college, batch, mobile, email, address):
         if duplicate:
             existing_email, existing_mobile = duplicate
             if email == existing_email:
-                st.error("Email already registered.")
+                st.error("❌ Email already registered.")
             elif mobile == existing_mobile:
-                st.error("Mobile already registered.")
+                st.error("❌ Mobile number already registered.")
         else:
             cursor = conn.cursor()
             query = """
@@ -49,9 +57,9 @@ def insert_student_data(student_name, college, batch, mobile, email, address):
             try:
                 cursor.execute(query, values)
                 conn.commit()
-                st.success("Student registered successfully!")
+                st.success("✅ Student registered successfully!")
             except Error as e:
-                st.error(f"Failed to insert record: {e}")
+                st.error(f"❌ Failed to insert record: {e}")
             finally:
                 cursor.close()
                 conn.close()
@@ -62,7 +70,7 @@ st.title("📋 Student Attendance Registration")
 with st.form("register_form"):
     student_name = st.text_input("Student Name")
     
-    college_options = ["GP Malvan", "GP Karad", "GP Kolhapur", "AIT Vita", "Jayawantrao Bhosale Poly K.M."]
+    college_options = ["GP Malvan", "GP Karad", "GP Kolhapur", "AIT Vita", "Jayawantrao Bhosale Poly K.M.", "Other"]
     college = st.selectbox("Select College", college_options)
     
     batch_options = ["B1", "B2"]
@@ -75,7 +83,11 @@ with st.form("register_form"):
     submitted = st.form_submit_button("Register")
 
     if submitted:
-        if all([student_name, college, batch, mobile, email, address]):
-            insert_student_data(student_name, college, batch, mobile, email, address)
+        if not all([student_name, college, batch, mobile, email, address]):
+            st.warning("⚠️ Please fill all the fields.")
+        elif not is_valid_mobile(mobile):
+            st.error("❌ Invalid mobile number. Please enter a 10-digit number.")
+        elif not is_valid_email(email):
+            st.error("❌ Invalid email address format.")
         else:
-            st.warning("Please fill all the fields.")
+            insert_student_data(student_name, college, batch, mobile, email, address)
