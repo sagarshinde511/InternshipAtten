@@ -70,7 +70,7 @@ st.title("📋 Student Attendance Registration")
 with st.form("register_form"):
     student_name = st.text_input("Student Name")
     
-    college_options = ["GP Malvan", "GP Karad", "GP Kolhapur", "AIT Vita", "Jayawantrao Bhosale Poly K.M.", "Other"]
+    college_options = ["GP Malvan", "GP Karad", "GP Kolhapur", "AIT Vita", "Jayawantrao Bhosale Poly K.M.", "NMPI Peth", "Other"]
     college = st.selectbox("Select College", college_options)
     
     batch_options = ["B1", "B2"]
